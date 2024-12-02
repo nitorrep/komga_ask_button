@@ -2,86 +2,85 @@
 // @name         Komga Telegram Notification Button
 // @namespace    http://tampermonkey.net/
 // @version      1.6
-// @description  Add a button to Komga to send a telegram message with the serie name
-// @match        YOUR KOMGA URL/*
+// @description  Adds a button to send a Telegram notification next to the Edit button in Komga
+// @match        http://192.168.2.92:8086/*
 // @grant        none
-
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    // Configuration Telegram
-    const TELEGRAM_BOT_TOKEN = 'YOUR_BOT_TOKEN';
-    const TELEGRAM_CHAT_ID = 'YOUR_CHAT_ID';
+    // Telegram Configuration
+    const TELEGRAM_BOT_TOKEN = 'BOT_TOKEN';
+    const TELEGRAM_CHAT_ID = 'CHAT_ID';
 
-    // Fonction pour envoyer un message Telegram
+    // Function to send a Telegram message
     async function sendTelegramNotification(seriesTitle) {
         try {
-            const message = encodeURIComponent(`📚 Série Komga : ${seriesTitle}`);
+            const message = encodeURIComponent(`To update : ${seriesTitle}`);
             const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage?chat_id=${TELEGRAM_CHAT_ID}&text=${message}`;
 
             const response = await fetch(url, { method: 'GET' });
 
             if (response.ok) {
-                alert('Notification Telegram envoyée avec succès !');
+                alert('Telegram notification sent successfully!');
             } else {
-                alert('Erreur lors de l\'envoi de la notification Telegram.');
+                alert('Error sending Telegram notification.');
             }
         } catch (error) {
-            console.error('Erreur:', error);
-            alert('Une erreur s\'est produite lors de l\'envoi de la notification.');
+            console.error('Error:', error);
+            alert('An error occurred while sending the notification.');
         }
     }
 
-    // Fonction pour récupérer le titre de la série
+    // Function to get the series title
     function getSeriesTitle() {
-        // Utiliser le titre de la page (ce qui s'affiche dans l'onglet)
+        // Use the page title (what is displayed in the tab)
         if (document.title) {
-            return document.title.trim();
+            return document.title.replace(/^Komga - /, '').trim();
         }
 
-        // Si le titre de la page n'est pas disponible, titre par défaut
-        return 'Série Komga';
+        // Default title if the page title is unavailable
+        return 'Komga Series';
     }
 
-    // Fonction principale pour ajouter le bouton
+    // Main function to add the button
     function addTelegramButton() {
-        // Trouver l'icône de modification
+        // Find the edit icon
         const editIcon = document.querySelector('i.mdi-pencil');
 
         if (editIcon) {
-            // Récupérer le titre de la série depuis le titre de la page
+            // Get the series title from the page title
             const seriesTitle = getSeriesTitle();
 
-            // Remonter au parent qui est probablement le bouton
+            // Go up to the parent, which is likely the button
             const editButton = editIcon.closest('button');
 
             if (editButton) {
-                // Vérifier si le bouton Telegram n'existe pas déjà
+                // Check if the Telegram button doesn't already exist
                 if (!document.querySelector('.telegram-notification-btn')) {
-                    // Créer le bouton Telegram
+                    // Create the Telegram button
                     const telegramButton = document.createElement('button');
                     telegramButton.type = 'button';
-                    telegramButton.innerHTML = '📨';
+                    telegramButton.innerHTML = '✉️';
                     telegramButton.className = editButton.className + ' telegram-notification-btn';
                     telegramButton.style.marginLeft = '10px';
 
-                    // Ajouter un gestionnaire d'événement
+                    // Add an event listener
                     telegramButton.addEventListener('click', () => {
                         sendTelegramNotification(seriesTitle);
                     });
 
-                    // Insérer le bouton juste après le bouton Éditer
+                    // Insert the button right after the Edit button
                     editButton.parentNode.insertBefore(telegramButton, editButton.nextSibling);
                 }
             }
         }
     }
 
-    // Initialisation
+    // Initialization
     function init() {
-        // Utiliser MutationObserver pour gérer le chargement dynamique
+        // Use MutationObserver to handle dynamic loading
         const observer = new MutationObserver(() => {
             addTelegramButton();
         });
@@ -89,6 +88,6 @@
         observer.observe(document.body, { childList: true, subtree: true });
     }
 
-    // Lancer l'initialisation
+    // Start initialization
     init();
 })();
